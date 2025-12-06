@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h2>Add Product</h2>
+  <form method="post">
+    <div>
+      <label>Product Name</label>
+      <input type="text" name="name" required>
+    </div>
+
+    <div>
+      <label>Quantity</label>
+      <input type="number" name="quantity" min="1" required>
+    </div>
+
+    <div>
+      <label>Price</label>
+      <input type="number" step="0.01" name="price" required>
+    </div>
+
+    <div>
+      <label>Location</label>
+      <select name="location_id" required>
+        <option value="">-- Select location --</option>
+        {% for loc in locations %}
+          <!-- assuming location table is (location_id, name) -->
+          <option value="{{ loc[0] }}">{{ loc[1] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit">Add Product</button>
+  </form>
+
+  <h3>Product-wise Quantity by Location</h3>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Product ID</th>
+        <th>Product Name</th>
+        <th>Location</th>
+        <th>Quantity at Location</th>
+        <th>Price</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in product_rows %}
+        <!-- row: [product_id, name, price, location_name, qty] -->
+        <tr data-product-id="{{ row[0] }}">
+          <td>{{ row[0] }}</td>
+          <td>{{ row[1] }}</td>
+          <td>{{ row[3] or 'N/A' }}</td>
+          <td>{{ row[4] }}</td>
+          <td>{{ row[2] }}</td>
+          <td>
+            <button
+              type="button"
+              class="delete-product-btn"
+              data-id="{{ row[0] }}"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>All Products (Summary)</h3>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Qty</th><th>Price</th></tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+        <!-- mark with data-product-id so JS can remove these rows too -->
+        <tr data-product-id="{{ p[0] }}">
+          <td>{{p[0]}}</td>
+          <td>{{p[1]}}</td>
+          <td>{{p[2]}}</td>
+          <td>{{p[3]}}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const deleteButtons = document.querySelectorAll('.delete-product-btn');
+
+  deleteButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const productId = this.getAttribute('data-id');
+
+      if (!confirm('Are you sure you want to delete this product?')) {
+        return;
+      }
+
+      fetch(`/product/delete/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Remove ALL rows for this product (from both tables)
+          const rows = document.querySelectorAll(
+            `tr[data-product-id="${productId}"]`
+          );
+          rows.forEach(row => row.remove());
+        } else {
+          alert('Error deleting product: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Something went wrong while deleting the product.');
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

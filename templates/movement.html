@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  {% if message %}
+    <div class="alert alert-danger">{{ message }}</div>
+  {% endif %}
+
+  <h2>Move Product</h2>
+  <form method="post">
+    <label for="product-select">Product:</label>
+    <select id="product-select" name="product_id" required>
+      <option value="" disabled selected>Choose a product</option>
+      {% for p in products %}
+        <!-- assuming product = (product_id, name, quantity, price) -->
+        <option value="{{ p[0] }}">{{ p[1] }} ({{ p[2] }} in stock)</option>
+      {% endfor %}
+    </select>
+
+    <label for="from-location-select">From Location:</label>
+    <select id="from-location-select" name="from_location">
+      <!-- Empty means “initial stock” / coming from outside -->
+      <option value="">– Initial Stock –</option>
+      <!-- options will be added dynamically based on product -->
+    </select>
+
+    <label for="to_loc">To Location:</label>
+    <select id="to_loc" name="to_location" required>
+      <option value="" disabled selected>Select destination</option>
+      {% for l in locations %}
+        <option value="{{ l[0] }}">{{ l[1] }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="qty">Quantity:</label>
+    <input id="qty" type="number" name="qty" min="1" required>
+
+    <button type="submit">Move</button>
+  </form>
+
+  <h2>Movement History</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Date &amp; Time</th>
+        <th>Product</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in movements %}
+        <tr>
+          <td>{{ m[0] }}</td>
+          <td>{{ m[1] }}</td>
+          <td>{{ m[2] }}</td>
+          <td>{{ m[3] or '––' }}</td>
+          <td>{{ m[4] or '––' }}</td>
+          <td>{{ m[5] }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Dynamic From Location based on selected product -->
+<script>
+  const productSelect = document.getElementById('product-select');
+  const fromLocationSelect = document.getElementById('from-location-select');
+
+  productSelect.addEventListener('change', function () {
+    const productId = this.value;
+
+    // Reset from_location dropdown to only the “Initial Stock” option
+    fromLocationSelect.innerHTML = '<option value="">– Initial Stock –</option>';
+
+    if (!productId) return;
+
+    fetch(`/product/${productId}/available-locations`)
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(loc => {
+          const opt = document.createElement('option');
+          opt.value = loc.id;
+          opt.textContent = `${loc.name} (qty: ${loc.qty})`;
+          fromLocationSelect.appendChild(opt);
+        });
+      })
+      .catch(err => console.error(err));
+  });
+</script>
+{% endblock %}

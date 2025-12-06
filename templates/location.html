@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h2>Add Location</h2>
+  <form method="post">
+    <label>Name:</label>
+    <input type="text" name="name" required>
+    <button type="submit">Add Location</button>
+  </form>
+
+  <h3>Locations</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in locations %}
+        <tr data-location-id="{{ l[0] }}">
+          <td>{{l[0]}}</td>
+          <td>{{l[1]}}</td>
+          <td>
+            <button
+              type="button"
+              class="delete-location-btn"
+              data-id="{{ l[0] }}"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const deleteButtons = document.querySelectorAll('.delete-location-btn');
+
+  deleteButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const locationId = this.getAttribute('data-id');
+
+      if (!confirm('Are you sure you want to delete this location?')) {
+        return;
+      }
+
+      fetch(`/location/delete/${locationId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const row = btn.closest('tr');
+          if (row) row.remove();
+        } else {
+          alert('Error deleting location: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Something went wrong while deleting the location.');
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

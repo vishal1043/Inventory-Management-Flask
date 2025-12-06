@@ -1,0 +1,40 @@
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.log
+
+# ===== Virtual Environment =====
+venv/
+env/
+.venv/
+
+# ===== Environment Variables =====
+*.env
+.env.*
+
+# ===== IDE / Editor =====
+.vscode/
+.idea/
+*.swp
+
+# ===== OS Files =====
+.DS_Store
+Thumbs.db
+
+# ===== Compiled / Cache =====
+.cache/
+.mypy_cache/
+pytest_cache/
+*.sqlite3
+
+# ===== Temporary / Local Files =====
+uploads/
+instance/
+
+# ===== Flask Specific =====
+*.db
+*.sqlite
